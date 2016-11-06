@@ -1,4 +1,4 @@
-package com.tenx.ms.retail.entity;
+package com.tenx.ms.retail.domain;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -14,12 +14,12 @@ public class OrderedProduct {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "order_id")
     private Order order;
 
     @NotNull(message = "Store can not be null")
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "store_id")
     private Store store;
 
@@ -33,11 +33,15 @@ public class OrderedProduct {
 
     private long boAmount;
 
-    public OrderedProduct() {
+    protected OrderedProduct() {
     }
 
-    public OrderedProduct(long id, Order order, Store store, Long product_id, long amount, long boAmount) {
-        this.id = id;
+    public OrderedProduct(Long product_id, long amount) {
+        this.product_id = product_id;
+        this.amount = amount;
+    }
+
+    public OrderedProduct(Order order, Store store, Long product_id, long amount, long boAmount) {
         this.order = order;
         this.store = store;
         this.product_id = product_id;
@@ -104,6 +108,7 @@ public class OrderedProduct {
 
     @Override
     public int hashCode() {
+//        System.out.println(toString());
         int result = getOrder().hashCode();
         result = 31 * result + getStore().hashCode();
         result = 31 * result + getProduct_id().hashCode();
@@ -113,8 +118,12 @@ public class OrderedProduct {
     @Override
     public String toString() {
         return "OrderedProduct{" +
-                "product_id=" + product_id +
+                "id=" + id +
+                ", order=" + order +
+                ", store=" + store +
+                ", product_id=" + product_id +
                 ", amount=" + amount +
+                ", boAmount=" + boAmount +
                 '}';
     }
 }

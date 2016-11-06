@@ -1,4 +1,4 @@
-package com.tenx.ms.retail.entity;
+package com.tenx.ms.retail.domain;
 
 import java.util.List;
 

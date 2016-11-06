@@ -1,12 +1,10 @@
 package com.tenx.ms.retail.rest;
 
-import java.util.List;
-import com.tenx.ms.retail.entity.Store;
-import com.tenx.ms.retail.repository.StoreRepository;
+import com.tenx.ms.retail.domain.Store;
+import com.tenx.ms.retail.service.StoreService;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletResponse;
 import static org.springframework.web.bind.annotation.RequestMethod.*;
@@ -14,13 +12,9 @@ import static org.springframework.web.bind.annotation.RequestMethod.*;
 @RestController
 public class StoreController {
 
-    private StoreRepository sr;
+    @Autowired
+    private StoreService storeService;
 
-    public StoreController() {
-        ApplicationContext ctx =
-                new AnnotationConfigApplicationContext(StoreRepository.class);
-        this.sr = ctx.getBean(StoreRepository.class);
-    }
 
     @RequestMapping("/")
     public String home() {
@@ -29,7 +23,7 @@ public class StoreController {
 
     @RequestMapping(method = POST, path = "/retail/v1/stores")
     public long create(@RequestBody Store store, HttpServletResponse response) {
-        Store s = sr.findAStore(store.getName());
+        Store s = storeService.findByName(store.getName());
         if(s != null){
             response.setStatus(HttpServletResponse.SC_CONFLICT);
             return -1;
@@ -39,16 +33,16 @@ public class StoreController {
             return -1;
         }
         else{
-            return sr.addStore(store.getName());
+            return storeService.save(new Store(store.getName()));
         }
     }
 
     @RequestMapping(path = "/retail/v1/stores", method=GET)
-    public List<Store> list(HttpServletResponse response){
+    public Iterable<Store> list(HttpServletResponse response){
         JSONObject responseDetailsJson = new JSONObject();
         JSONArray jsonArray = new JSONArray();
-        List<Store> stores = sr.listAllStores();
-        if(stores.size() == 0){
+        Iterable<Store> stores = storeService.listAllStores();
+        if(!stores.iterator().hasNext()){
             response.setStatus(HttpServletResponse.SC_NO_CONTENT);
             return null;
         }
@@ -64,7 +58,7 @@ public class StoreController {
 
     @RequestMapping(path = "/retail/v1/stores", method=GET, params="storeId")
     public Store getAStore(@RequestParam(value = "storeId") Long store_id, HttpServletResponse response){
-        Store s = sr.findAStore(store_id);
+        Store s = storeService.findByID(store_id);
         if(s == null){
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return s;
@@ -77,7 +71,7 @@ public class StoreController {
 
     @RequestMapping(path = "/retail/v1/stores", method=GET, params="name")
     public Store getAStore(@RequestParam(value = "name") String name, HttpServletResponse response){
-        Store s = sr.findAStore(name);
+        Store s = storeService.findByName(name);
         if(s == null){
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return s;
@@ -90,11 +84,11 @@ public class StoreController {
 
     @RequestMapping(method = DELETE, path = "/retail/v1/stores", params="storeId")
     public void delete(@RequestParam(value = "storeId") Long store_id, HttpServletResponse response) {
-        Store s = sr.findAStore(store_id);
+        Store s = storeService.findByID(store_id);
         if(s == null){
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
-        sr.deleteStore(store_id);
+        storeService.delete(store_id);
     }
 }

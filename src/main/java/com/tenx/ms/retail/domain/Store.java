@@ -1,4 +1,4 @@
-package com.tenx.ms.retail.entity;
+package com.tenx.ms.retail.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.*;
@@ -18,7 +18,7 @@ public class Store {
     private String name;
 
     @JsonIgnore
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "stores_products", joinColumns = @JoinColumn(name = "store_id"))
     @Column(name = "product_ids")
     private Set<Long> product_ids;
@@ -32,20 +32,16 @@ public class Store {
     private Set<Stock> stocks;
 
     @JsonIgnore
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "stores_orders", joinColumns = @JoinColumn(name = "store_id"))
     @Column(name = "order_ids")
     private Set<Long> order_ids;
 
-    public Store() {
+    protected Store() {
     }
 
-    public Store(long store_id, String name, Set<Long> product_ids, Set<Stock> stocks, Set<Long> order_ids) {
-        this.store_id = store_id;
+    public Store(String name) {
         this.name = name;
-        this.product_ids = product_ids;
-        this.stocks = stocks;
-        this.order_ids = order_ids;
     }
 
     public long getStore_id() {

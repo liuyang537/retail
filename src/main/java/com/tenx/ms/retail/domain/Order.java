@@ -1,4 +1,4 @@
-package com.tenx.ms.retail.entity;
+package com.tenx.ms.retail.domain;
 
 import org.hibernate.validator.constraints.Email;
 import java.time.LocalDate;
@@ -16,21 +16,21 @@ public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "order_id")
-    private long order_id;
+    private Long order_id;
 
 //    @ManyToOne//(cascade = CascadeType.ALL)
-    @Column(name = "store_id")
-    private Long store_id;
+    @JoinColumn(name = "store_id")
+    private long store_id;
 
     @NotNull
     @Column(name = "order_date", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDate order_date;
 
-    @NotNull
+//    @NotNull
     @Column(name = "status")
     private String status;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "order")
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "order")
     private List<OrderedProduct> orderedProducts;
 
     @NotNull
@@ -49,18 +49,16 @@ public class Order {
     private String email;
 
     @NotNull
-    @Size(max = 15)
+    @Size(max = 25)
     @Column(name = "phone", length = 15)
     private String phone;
 
     public Order() {
     }
 
-    public Order(long order_id, Long store_id, LocalDate order_date, String status, String first_name, String last_name, String email, String phone) {
-        this.order_id = order_id;
+    public Order(long store_id, LocalDate order_date, String first_name, String last_name, String email, String phone) {
         this.store_id = store_id;
         this.order_date = order_date;
-        this.status = status;
         this.first_name = first_name;
         this.last_name = last_name;
         this.email = email;
@@ -91,20 +89,20 @@ public class Order {
         else{ return true; }
     }
 
-    public long getOrder_id() {
+    public Long getOrder_id() {
         return order_id;
     }
 
-    public Long getStore_id() {
+    public long getStore_id() {
         return store_id;
+    }
+
+    public void setStore_id(long store_id) {
+        this.store_id = store_id;
     }
 
     public void setOrder_id(long order_id) {
         this.order_id = order_id;
-    }
-
-    public void setStore_id(Long store_id) {
-        this.store_id = store_id;
     }
 
     public LocalDate getOrder_date() {
@@ -171,7 +169,8 @@ public class Order {
         Order order = (Order) o;
 
         if (getOrder_id() != order.getOrder_id()) return false;
-        if (!getStore_id().equals(order.getStore_id())) return false;
+        if (getStore_id() != order.getStore_id()) return false;
+        if (!getOrder_date().equals(order.getOrder_date())) return false;
         if (!getFirst_name().equals(order.getFirst_name())) return false;
         if (!getLast_name().equals(order.getLast_name())) return false;
         if (!getEmail().equals(order.getEmail())) return false;
@@ -182,7 +181,8 @@ public class Order {
     @Override
     public int hashCode() {
         int result = (int) (getOrder_id() ^ (getOrder_id() >>> 32));
-        result = 31 * result + getStore_id().hashCode();
+        result = 31 * result + (int) (getStore_id() ^ (getStore_id() >>> 32));
+        result = 31 * result + getOrder_date().hashCode();
         result = 31 * result + getFirst_name().hashCode();
         result = 31 * result + getLast_name().hashCode();
         result = 31 * result + getEmail().hashCode();
@@ -196,7 +196,6 @@ public class Order {
                 "order_id=" + order_id +
                 ", store_id=" + store_id +
                 ", order_date=" + order_date +
-                ", status='" + status + '\'' +
                 ", first_name='" + first_name + '\'' +
                 ", last_name='" + last_name + '\'' +
                 ", email='" + email + '\'' +

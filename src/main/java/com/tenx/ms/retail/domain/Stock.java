@@ -1,4 +1,4 @@
-package com.tenx.ms.retail.entity;
+package com.tenx.ms.retail.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.persistence.*;
@@ -15,11 +15,11 @@ public class Stock {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
 
-    @ManyToOne//(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;
 
-    @ManyToOne//(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "store_id")
     private Store store;
 
@@ -27,14 +27,7 @@ public class Stock {
     @Column(name = "count")
     private long count;
 
-    public Stock() {
-    }
-
-    public Stock(long id, Product product, Store store, long count) {
-        this.id = id;
-        this.product = product;
-        this.store = store;
-        this.count = count;
+    protected Stock() {
     }
 
     public Stock(Product product, Store store, long count) {

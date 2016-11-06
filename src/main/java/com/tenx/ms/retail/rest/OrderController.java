@@ -1,13 +1,13 @@
 package com.tenx.ms.retail.rest;
 
 import java.util.List;
-import com.tenx.ms.retail.entity.OrderStatus;
+import com.tenx.ms.retail.domain.*;
 import com.tenx.ms.retail.repository.OrderRepository;
 import com.tenx.ms.retail.repository.StoreRepository;
-import com.tenx.ms.retail.entity.Order;
-import com.tenx.ms.retail.entity.OrderedProduct;
-import com.tenx.ms.retail.entity.Store;
+import com.tenx.ms.retail.service.OrderService;
+import com.tenx.ms.retail.service.StoreService;
 import net.minidev.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.web.bind.annotation.*;
@@ -18,15 +18,11 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 @RestController
 public class OrderController {
 
-    private OrderRepository or;
-    private StoreRepository sr;
+    @Autowired
+    private OrderService orderService;
 
-    public OrderController() {
-            ApplicationContext ctx1 = new AnnotationConfigApplicationContext(StoreRepository.class);
-            this.sr = ctx1.getBean(StoreRepository.class);
-            ApplicationContext ctx2 = new AnnotationConfigApplicationContext(OrderRepository.class);
-            this.or = ctx2.getBean(OrderRepository.class);
-    }
+    @Autowired
+    private StoreService storeService;
 
     @RequestMapping(path = "/retail/v1/orders/{storeId}/", method=POST)
     public OrderStatus create(@PathVariable("storeId") long store_id,
@@ -38,8 +34,8 @@ public class OrderController {
         String email = order.getEmail();
         String phone = order.getPhone();
 
-        Store s = sr.findAStore(store_id);
-        if(s == null){
+        Store store = storeService.findByID(store_id);
+        if(store == null){
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return null;
         }
@@ -49,7 +45,7 @@ public class OrderController {
             return null;
         }
 
-        OrderStatus orderStatus = or.createOrder (store_id, order_date, orderedProducts, first_name, last_name,  email, phone);
+        OrderStatus orderStatus = orderService.create(store_id, order_date, first_name, last_name,  email, phone, orderedProducts);
         JSONObject orderStatusDetailsJson = new JSONObject();
         orderStatusDetailsJson.put("order_id", orderStatus.getOrder_id());
         orderStatusDetailsJson.put("staus", orderStatus.getStatus());

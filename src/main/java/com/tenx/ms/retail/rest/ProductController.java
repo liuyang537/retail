@@ -1,12 +1,16 @@
 package com.tenx.ms.retail.rest;
 
+
 import java.util.List;
-import com.tenx.ms.retail.entity.Product;
-import com.tenx.ms.retail.entity.Store;
+import com.tenx.ms.retail.domain.Product;
+import com.tenx.ms.retail.domain.Store;
 import com.tenx.ms.retail.repository.ProductRepository;
 import com.tenx.ms.retail.repository.StoreRepository;
+import com.tenx.ms.retail.service.ProductService;
+import com.tenx.ms.retail.service.StoreService;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.web.bind.annotation.*;
@@ -18,15 +22,11 @@ import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 @RestController
 public class ProductController {
 
-    private ProductRepository pr;
-    private StoreRepository sr;
+    @Autowired
+    private ProductService productService;
 
-    public ProductController() {
-        ApplicationContext ctx1 = new AnnotationConfigApplicationContext(StoreRepository.class);
-        this.sr = ctx1.getBean(StoreRepository.class);
-        ApplicationContext ctx2 = new AnnotationConfigApplicationContext(ProductRepository.class);
-        this.pr = ctx2.getBean(ProductRepository.class);
-    }
+    @Autowired
+    private StoreService storeService;
 
     @RequestMapping(path = "/retail/v1/products/{storeId}/", method=POST)
     public long addAProduct(@PathVariable("storeId") long store_id, @RequestBody Product product, HttpServletResponse response) {
@@ -35,43 +35,41 @@ public class ProductController {
         Double price = product.getPrice();
         String sku = product.getSku();
 
-        Store s = sr.findAStore(store_id);
+        Store s = storeService.findByID(store_id);
         if(s == null){
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return -1;
         }
 
-        Product p = pr.findAProduct(store_id, name);
+        Product p = productService.findByNameAndStore_id(name, store_id);
         if(p != null){
             response.setStatus(HttpServletResponse.SC_CONFLICT);
             return -2;
         }
 
-        p = pr.findSku(store_id, sku);
+        p = productService.findBySkuAndStore_id(sku, store_id);
         if(p != null){
             response.setStatus(HttpServletResponse.SC_CONFLICT);
-            return -3;
+            return -2;
         }
-        System.out.print("");
+
         if(name.length() == 0 || description.length() > 255 || product.invalidSku() || product.invalidPrice() ){
             response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED);
-            return -4;
+            return -3;
         }
 
-        return pr.addProduct(name, description, price, sku, store_id);
+        return productService.save(new Product(store_id, name, description, sku, price));
     }
-
 
     @RequestMapping(path = "/retail/v1/products/{storeId}/", method=GET)
     public List<Product> listProducts(@PathVariable("storeId") long store_id, HttpServletResponse response){
 
-        Store s = sr.findAStore(store_id);
+        Store s = storeService.findByID(store_id);
         if(s == null){
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return null;
         }
-
-        List<Product> products = pr.listAllProducts(store_id);
+        List<Product> products = productService.list(store_id);
         if(products.size() == 0) {
             response.setStatus(HttpServletResponse.SC_NO_CONTENT);
             return null;
@@ -97,13 +95,13 @@ public class ProductController {
     public Product getAProduct(@PathVariable("storeId") long store_id,
                                @RequestParam(value="productId", defaultValue="0") long product_id, HttpServletResponse response){
 
-        Store s = sr.findAStore(store_id);
+        Store s = storeService.findByID(store_id);
         if(s == null){
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return null;
         }
 
-        Product p = pr.findAProduct(store_id, product_id);
+        Product p = productService.findByIDAndStore_id(product_id,store_id);
         if(p == null){
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return p;
@@ -123,13 +121,13 @@ public class ProductController {
     public Product getAProduct(@PathVariable("storeId") long store_id,
                                @RequestParam(value="name", defaultValue="") String name, HttpServletResponse response){
 
-        Store s = sr.findAStore(store_id);
+        Store s = storeService.findByID(store_id);
         if(s == null){
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return null;
         }
 
-        Product p = pr.findAProduct(store_id, name);
+        Product p = productService.findByNameAndStore_id(name, store_id);
         if(p == null){
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return p;
@@ -148,19 +146,19 @@ public class ProductController {
     @RequestMapping(method = DELETE, path = "/retail/v1/products/{storeId}/", params="productId")
     public void delete(@PathVariable("storeId") long store_id, @RequestParam(value="productId") Long product_id, HttpServletResponse response) {
 
-        Store s = sr.findAStore(store_id);
+        Store s = storeService.findByID(store_id);
         if(s == null){
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
 
-        Product p = pr.findAProduct(store_id, product_id);
+        Product p = productService.findByIDAndStore_id(product_id, store_id);
         if(p == null){
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
 
-        pr.deleteProduct(store_id, product_id);
+        productService.delete(product_id, store_id);
     }
 
 }
