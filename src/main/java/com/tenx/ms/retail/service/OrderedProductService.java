@@ -59,9 +59,6 @@ public class OrderedProductService {
         product.setOrderedProduct_ids(orderedProduct_ids);
         productService.save(product);
 
-//        System.out.println("3.14159B");
-//        System.out.println(orderedProduct.toString());
-
         return orderedProduct;
     }
 }

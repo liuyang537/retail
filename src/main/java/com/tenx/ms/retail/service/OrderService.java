@@ -43,10 +43,6 @@ public class OrderService {
         store.setOrder_ids(order_ids);
         storeRepository.save(store);
 
-//        System.out.println("3.14159C");
-//        System.out.println(store_id);
-//        System.out.println(order.toString());
-
         return setOrderedProduct(order, store, ops);
     }
 
@@ -78,8 +74,6 @@ public class OrderService {
             System.out.println(op.toString());
         }
         order.setStatus(orderStatus.getStatus());
-//        System.out.println("3.14159A");
-//        System.out.println(order.toString());
         orderRepository.save(order);
         return orderStatus;
     }

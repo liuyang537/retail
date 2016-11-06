@@ -108,7 +108,6 @@ public class OrderedProduct {
 
     @Override
     public int hashCode() {
-//        System.out.println(toString());
         int result = getOrder().hashCode();
         result = 31 * result + getStore().hashCode();
         result = 31 * result + getProduct_id().hashCode();
